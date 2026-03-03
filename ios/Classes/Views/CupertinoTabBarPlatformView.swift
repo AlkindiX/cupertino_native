@@ -62,7 +62,11 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
       var items: [UITabBarItem] = []
       for i in range {
         var image: UIImage? = nil
-        if i < symbols.count { image = UIImage(systemName: symbols[i]) ?? UIImage(named: symbols[i]) }
+        if i < symbols.count {
+          let sym = symbols[i]
+          image = (UIImage(systemName: sym) ?? UIImage(named: sym))
+            .map { $0.withRenderingMode(.alwaysTemplate) }
+        }
         let title = (i < labels.count) ? labels[i] : nil
         items.append(UITabBarItem(title: title, image: image, selectedImage: image))
       }
@@ -171,7 +175,11 @@ channel.setMethodCallHandler { [weak self] call, result in
             var items: [UITabBarItem] = []
             for i in range {
               var image: UIImage? = nil
-              if i < symbols.count { image = UIImage(systemName: symbols[i]) ?? UIImage(named: symbols[i]) }
+              if i < symbols.count {
+                let sym = symbols[i]
+                image = (UIImage(systemName: sym) ?? UIImage(named: sym))
+                  .map { $0.withRenderingMode(.alwaysTemplate) }
+              }
               let title = (i < labels.count) ? labels[i] : nil
               items.append(UITabBarItem(title: title, image: image, selectedImage: image))
             }
@@ -219,7 +227,11 @@ channel.setMethodCallHandler { [weak self] call, result in
             var items: [UITabBarItem] = []
             for i in range {
               var image: UIImage? = nil
-              if i < symbols.count { image = UIImage(systemName: symbols[i]) ?? UIImage(named: symbols[i]) }
+              if i < symbols.count {
+                let sym = symbols[i]
+                image = (UIImage(systemName: sym) ?? UIImage(named: sym))
+                  .map { $0.withRenderingMode(.alwaysTemplate) }
+              }
               let title = (i < labels.count) ? labels[i] : nil
               items.append(UITabBarItem(title: title, image: image, selectedImage: image))
             }
