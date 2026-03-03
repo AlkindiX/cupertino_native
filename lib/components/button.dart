@@ -22,9 +22,12 @@ class CNButton extends StatefulWidget {
     this.height = 32.0,
     this.shrinkWrap = false,
     this.style = CNButtonStyle.plain,
+    this.fontSize,
+    this.foregroundColor,
+    bool round = false,
   }) : icon = null,
        width = null,
-       round = false;
+       round = round;
 
   /// Creates a round, icon-only variant of [CNButton].
   const CNButton.icon({
@@ -35,6 +38,8 @@ class CNButton extends StatefulWidget {
     this.tint,
     double size = 44.0,
     this.style = CNButtonStyle.glass,
+    this.fontSize,
+    this.foregroundColor,
   }) : label = null,
        round = true,
        width = size,
@@ -66,8 +71,14 @@ class CNButton extends StatefulWidget {
   /// Visual style to apply.
   final CNButtonStyle style;
 
-  /// Whether the icon variant (round) is used.
+  /// Whether the button uses a capsule/round shape.
   final bool round;
+
+  /// Optional font size for the button label.
+  final double? fontSize;
+
+  /// Optional explicit label/foreground color (overrides tint-derived color).
+  final Color? foregroundColor;
 
   /// Whether this instance is configured as the icon variant.
   bool get isIcon => icon != null;
@@ -86,6 +97,8 @@ class _CNButtonState extends State<CNButton> {
   int? _lastIconColor;
   double? _intrinsicWidth;
   CNButtonStyle? _lastStyle;
+  double? _lastFontSize;
+  int? _lastForegroundColor;
   Offset? _downPosition;
   bool _pressed = false;
 
@@ -152,11 +165,17 @@ class _CNButtonState extends State<CNButton> {
             .toList(),
       if (widget.icon?.gradient != null)
         'buttonIconGradientEnabled': widget.icon!.gradient,
-      if (widget.isIcon) 'round': true,
+      if (widget.isIcon) 'round': true else if (widget.round) 'round': true,
       'buttonStyle': widget.style.name,
       'enabled': (widget.enabled && widget.onPressed != null),
       'isDark': _isDark,
       'style': encodeStyle(context, tint: _effectiveTint),
+      if (widget.fontSize != null) 'buttonFontSize': widget.fontSize,
+      if (widget.foregroundColor != null)
+        'buttonForegroundColor': resolveColorToArgb(
+          widget.foregroundColor,
+          context,
+        ),
     };
 
     final platformView = defaultTargetPlatform == TargetPlatform.iOS
@@ -233,6 +252,8 @@ class _CNButtonState extends State<CNButton> {
     _lastIconSize = widget.icon?.size;
     _lastIconColor = resolveColorToArgb(widget.icon?.color, context);
     _lastStyle = widget.style;
+    _lastFontSize = widget.fontSize;
+    _lastForegroundColor = resolveColorToArgb(widget.foregroundColor, context);
     if (!widget.isIcon) {
       _requestIntrinsicSize();
     }
@@ -285,6 +306,17 @@ class _CNButtonState extends State<CNButton> {
       await ch.invokeMethod('setButtonTitle', {'title': widget.label});
       _lastTitle = widget.label;
       _requestIntrinsicSize();
+    }
+
+    if (widget.fontSize != null && _lastFontSize != widget.fontSize) {
+      await ch.invokeMethod('setFontSize', {'fontSize': widget.fontSize});
+      _lastFontSize = widget.fontSize;
+    }
+
+    final fgColor = resolveColorToArgb(widget.foregroundColor, context);
+    if (fgColor != null && _lastForegroundColor != fgColor) {
+      await ch.invokeMethod('setForegroundColor', {'color': fgColor});
+      _lastForegroundColor = fgColor;
     }
 
     if (widget.isIcon) {

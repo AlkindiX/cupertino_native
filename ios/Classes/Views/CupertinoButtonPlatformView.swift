@@ -7,6 +7,9 @@ class CupertinoButtonPlatformView: NSObject, FlutterPlatformView {
   private let button: UIButton
   private var isEnabled: Bool = true
   private var currentButtonStyle: String = "automatic"
+  private var fontSize: CGFloat? = nil
+  private var foregroundColor: UIColor? = nil
+  private var makeRound: Bool = false
 
   init(frame: CGRect, viewId: Int64, args: Any?, messenger: FlutterBinaryMessenger) {
     self.channel = FlutterMethodChannel(name: "CupertinoNativeButton_\(viewId)", binaryMessenger: messenger)
@@ -21,6 +24,8 @@ class CupertinoButtonPlatformView: NSObject, FlutterPlatformView {
     var isDark: Bool = false
     var tint: UIColor? = nil
     var buttonStyle: String = "automatic"
+    var fontSize: CGFloat? = nil
+    var foregroundColor: UIColor? = nil
     var enabled: Bool = true
     var iconMode: String? = nil
     var iconPalette: [NSNumber] = []
@@ -37,6 +42,8 @@ class CupertinoButtonPlatformView: NSObject, FlutterPlatformView {
       if let e = dict["enabled"] as? NSNumber { enabled = e.boolValue }
       if let m = dict["buttonIconRenderingMode"] as? String { iconMode = m }
       if let pal = dict["buttonIconPaletteColors"] as? [NSNumber] { iconPalette = pal }
+      if let fs = dict["buttonFontSize"] as? NSNumber { fontSize = CGFloat(truncating: fs) }
+      if let fc = dict["buttonForegroundColor"] as? NSNumber { foregroundColor = Self.colorFromARGB(fc.intValue) }
     }
 
     super.init()
@@ -56,6 +63,9 @@ class CupertinoButtonPlatformView: NSObject, FlutterPlatformView {
       button.bottomAnchor.constraint(equalTo: container.bottomAnchor),
     ])
 
+    self.fontSize = fontSize
+    self.foregroundColor = foregroundColor
+    self.makeRound = makeRound
     applyButtonStyle(buttonStyle: buttonStyle, round: makeRound)
     currentButtonStyle = buttonStyle
     button.isEnabled = enabled
@@ -110,15 +120,26 @@ class CupertinoButtonPlatformView: NSObject, FlutterPlatformView {
         if let args = call.arguments as? [String: Any] {
           if let n = args["tint"] as? NSNumber {
             self.button.tintColor = Self.colorFromARGB(n.intValue)
-            // Re-apply style so configuration picks up new base colors
-            self.applyButtonStyle(buttonStyle: self.currentButtonStyle, round: makeRound)
+            self.applyButtonStyle(buttonStyle: self.currentButtonStyle, round: self.makeRound)
           }
           if let bs = args["buttonStyle"] as? String {
             self.currentButtonStyle = bs
-            self.applyButtonStyle(buttonStyle: bs, round: makeRound)
+            self.applyButtonStyle(buttonStyle: bs, round: self.makeRound)
           }
           result(nil)
         } else { result(FlutterError(code: "bad_args", message: "Missing style", details: nil)) }
+      case "setFontSize":
+        if let args = call.arguments as? [String: Any], let fs = args["fontSize"] as? NSNumber {
+          self.fontSize = CGFloat(truncating: fs)
+          self.applyButtonStyle(buttonStyle: self.currentButtonStyle, round: self.makeRound)
+          result(nil)
+        } else { result(FlutterError(code: "bad_args", message: "Missing fontSize", details: nil)) }
+      case "setForegroundColor":
+        if let args = call.arguments as? [String: Any], let fc = args["color"] as? NSNumber {
+          self.foregroundColor = Self.colorFromARGB(fc.intValue)
+          self.applyButtonStyle(buttonStyle: self.currentButtonStyle, round: self.makeRound)
+          result(nil)
+        } else { result(FlutterError(code: "bad_args", message: "Missing color", details: nil)) }
       case "setEnabled":
         if let args = call.arguments as? [String: Any], let e = args["enabled"] as? NSNumber {
           self.isEnabled = e.boolValue
@@ -243,10 +264,22 @@ class CupertinoButtonPlatformView: NSObject, FlutterPlatformView {
           break
         }
       }
+      // Explicit foreground color always wins over tint-derived colour
+      if let fg = foregroundColor {
+        config.baseForegroundColor = fg
+      }
       // Restore content after style swap
       config.title = currentTitle
       config.image = currentImage
       config.preferredSymbolConfigurationForImage = currentSymbolCfg
+      // Apply custom font size if provided
+      if let fs = fontSize {
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+          var attrs = incoming
+          attrs.font = UIFont.systemFont(ofSize: fs, weight: .semibold)
+          return attrs
+        }
+      }
       button.configuration = config
     } else {
       button.layer.cornerRadius = round ? 999 : 8
