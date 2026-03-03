@@ -91,7 +91,7 @@ class CupertinoIconPlatformView: NSObject, FlutterPlatformView {
   func view() -> UIView { container }
 
   private func rebuild() {
-    var img: UIImage? = UIImage(systemName: name)
+    let img: UIImage? = UIImage(systemName: name)
     guard var image = img else { imageView.image = nil; return }
 
     if let s = size {

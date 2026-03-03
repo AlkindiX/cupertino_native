@@ -143,7 +143,7 @@ class CupertinoButtonPlatformView: NSObject, FlutterPlatformView {
             image = img.applyingSymbolConfiguration(UIImage.SymbolConfiguration(pointSize: CGFloat(truncating: s))) ?? img
           }
           if let mode = args["buttonIconRenderingMode"] as? String, let img0 = image {
-            var img = img0
+            let img = img0
             switch mode {
             case "hierarchical":
               if #available(iOS 15.0, *), let c = args["buttonIconColor"] as? NSNumber {

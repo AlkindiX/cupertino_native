@@ -309,7 +309,7 @@ class CupertinoPopupMenuButtonPlatformView: NSObject, FlutterPlatformView {
         }
         let isEnabled = i < enabled.count ? enabled[i] : true
         let isChecked = i < checked.count ? checked[i] : false
-        var attributes: UIMenuElement.Attributes = isEnabled ? [] : [.disabled]
+        let attributes: UIMenuElement.Attributes = isEnabled ? [] : [.disabled]
         var state: UIMenuElement.State = .off
         if isChecked {
           state = .on
